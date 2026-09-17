@@ -67,7 +67,7 @@
 
 ## 📂 프로젝트 구조 (Directory Structure)
 
-\`\`\`text
+```text
 onePerday/
 ├── backend/                  # NestJS 기반 메인 API 서버
 │   ├── src/auth/             # 사용자 인증 및 관리
@@ -81,7 +81,7 @@ onePerday/
 │   ├── app/                  # Next.js App 라우터 구조
 │   └── pages/                # 회원 및 영양제 DB 관리 페이지
 └── LLM_OCR_DEPLOY_KIT/       # AI 추천 및 OCR 기능 독립 배포 모듈
-\`\`\`
+```
 
 ---
 
@@ -90,29 +90,29 @@ onePerday/
 각 모듈별로 독립적인 실행 환경이 필요합니다. 아래 가이드를 참고하여 실행해 주세요.
 
 ### 1. Backend (NestJS API 서버)
-\`\`\`bash
+```bash
 cd backend
 npm install
 # .env 파일 설정 필수 (Supabase URL, DB URL, Gemini API Key 등)
 npm run start:dev
-\`\`\`
+```
 
 ### 2. Python 스크립트 환경 설정 (OCR 및 이미지 처리)
-\`\`\`bash
+```bash
 cd backend/scripts
 pip install -r requirements.txt
-\`\`\`
+```
 
 ### 3. Frontend (Flutter 모바일 앱)
-\`\`\`bash
+```bash
 cd frontend
 flutter pub get
 flutter run
-\`\`\`
+```
 
 ### 4. Admin Web (Next.js 관리자 페이지)
-\`\`\`bash
+```bash
 cd admin
 npm install
 npm run dev
-\`\`\`
+```
