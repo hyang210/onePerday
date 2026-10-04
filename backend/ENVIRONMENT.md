@@ -23,20 +23,17 @@ CLOVA_OCR_INVOKE_URL="https://your-clova-ocr-invoke-url"
 CLOVA_OCR_SECRET="your-clova-ocr-secret"
 
 # YOLO 라벨 crop
-# 기본값은 C:\OPD\onePerday-Feature-YOLO-SJ\weights\best.pt 입니다.
+# 미설정 시 backend 실행 위치 기준 ../../onePerday-Feature-YOLO-SJ/weights/best.pt 를 찾습니다.
 YOLO_MODEL_PATH="C:\\OPD\\onePerday-Feature-YOLO-SJ\\weights\\best.pt"
 PYTHON_BIN="python"
 YOLO_CONF=0.35
 YOLO_CROP_PADDING=0.06
 ```
 
-프론트엔드에서 백엔드 주소를 바꾸려면 Flutter 실행 시 다음 값을 지정합니다.
+프론트엔드의 백엔드 주소는 `frontend/lib/core/constant/app_constants.dart`의 `AppConstants.apiBaseUrl`에서 관리합니다. (`ApiConfig.baseUrl`도 이 값을 그대로 사용합니다.)
+Android 에뮬레이터에서 로컬 백엔드를 쓰려면 이 값을 `http://10.0.2.2:3000`으로 바꿉니다.
 
-```bash
-flutter run --dart-define=API_BASE_URL=http://<PC-IP>:3000
-```
-
-Android 에뮬레이터에서는 기본값 `http://10.0.2.2:3000`을 사용합니다.
+영양제 라벨 OCR은 `POST /label-recognition/analyze` 하나로 처리합니다. (YOLO crop → CLOVA OCR → Gemini 구조화 → DB TOP 1 매칭)
 
 YOLO crop 스크립트는 Python에서 실행되므로 서버 환경에 아래 패키지가 필요합니다.
 

@@ -1,9 +1,7 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:simcap/core/constant/app_constants.dart';
@@ -12,6 +10,7 @@ import 'package:simcap/features/cabinet/presentation/barcode_scan_screen.dart';
 import 'package:simcap/features/cabinet/widgets/drum_roll_time_picker.dart';
 import 'package:simcap/services/auth_service.dart';
 import 'package:simcap/services/cabinet_api_service.dart';
+import 'package:simcap/services/label_recognition_api_service.dart';
 
 const int _tabLabel = 0;
 const int _tabManual = 1;
@@ -102,42 +101,21 @@ class _AddSupplementScreenState extends State<AddSupplementScreen>
   Future<void> _processOCR(File imageFile) async {
     setState(() => _isLoadingOCR = true);
     try {
-      final uri = Uri.parse('${AppConstants.apiBaseUrl}/supplements/ocr');
-      final request = http.MultipartRequest('POST', uri);
-      request.headers.addAll(AppConstants.headers);
+      final result = await LabelRecognitionApiService().analyze(imageFile);
+      final nutrients = result.nutrientNames;
 
-      request.files.add(
-        await http.MultipartFile.fromPath('image', imageFile.path),
-      );
-
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final Map<String, dynamic> result = json.decode(
-          utf8.decode(response.bodyBytes),
-        );
-
-        if (!mounted) return;
-        setState(() {
-          _supplementId = int.tryParse(
-            result['supplementId']?.toString() ??
-                result['id']?.toString() ??
-                '',
-          );
-
-          _nameController.text = result['productName'] ?? '알 수 없는 영양제';
-          _brandController.text = result['brandName'] ?? '알 수 없는 브랜드';
-          _nutrientController.text = result['nutrients'] ?? '비타민C, 비타민D, 아연';
-          _imageUrl = result['imageUrl']; // OCR에서 매칭된 이미지 URL 저장
-          _isLoadingOCR = false;
-          _tabController.animateTo(_tabManual);
-        });
-      } else {
-        throw Exception(
-          'Server responded with status code: ${response.statusCode}',
-        );
-      }
+      if (!mounted) return;
+      setState(() {
+        _supplementId = int.tryParse(result.supplementId ?? '');
+        _nameController.text = result.productName;
+        _brandController.text = result.brandName;
+        _nutrientController.text = nutrients.isNotEmpty
+            ? nutrients.join(', ')
+            : '영양제 성분을 찾을 수 없습니다.';
+        _imageUrl = result.imageUrl; // DB에서 매칭된 이미지 URL 저장
+        _isLoadingOCR = false;
+        _tabController.animateTo(_tabManual);
+      });
     } catch (e) {
       debugPrint('OCR Upload Error: $e');
       if (!mounted) return;
