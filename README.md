@@ -76,10 +76,9 @@ onePerday/
 ├── frontend/                 # Flutter 기반 모바일 애플리케이션
 │   ├── lib/                  # Dart UI 및 비즈니스 로직
 │   └── assets/fonts/         # 폰트 리소스
-├── admin/                    # Next.js 기반 관리자 웹 대시보드
-│   ├── app/                  # Next.js App 라우터 구조
-│   └── pages/                # 회원 및 영양제 DB 관리 페이지
-└── LLM_OCR_DEPLOY_KIT/       # AI 추천 및 OCR 기능 독립 배포 모듈
+└── admin/                    # Next.js 기반 관리자 웹 대시보드
+    ├── app/                  # Next.js App 라우터 구조
+    └── pages/                # 회원 및 영양제 DB 관리 페이지
 ```
 
 ---
