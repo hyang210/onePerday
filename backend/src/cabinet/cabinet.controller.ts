@@ -89,6 +89,19 @@ export class CabinetController {
     };
   }
 
+  @Get(':id/store-product')
+  async findStoreProduct(
+    @Param('id', ParseBigIntIdPipe) id: string,
+    @CurrentUser() user: AuthUser,
+  ) {
+    const data = await this.cabinetService.findStoreProduct(id, user.id);
+
+    return {
+      success: true,
+      data: serializeBigInt(data),
+    };
+  }
+
   @Patch(':id')
   async update(
     @Param('id', ParseBigIntIdPipe) id: string,

@@ -1,4 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import {
+  calcDaysLeft,
+  CRITICAL_STOCK_DAYS,
+  LOW_STOCK_DAYS,
+} from '../cabinet/stock-forecast';
 import { PrismaService } from '../prisma/prisma.service';
 
 type ReminderStatus = 'UPCOMING' | 'DUE' | 'MISSED' | 'TAKEN';
@@ -63,9 +68,9 @@ export class RemindersService {
     const stockReminders = inventories
       .map((item) => {
         const dailyDose = item.daily_dose ?? 1;
+        const dailyFrequency = item.daily_frequency ?? 1;
         const stockCount = item.stock_count ?? 0;
-        const daysLeft =
-          dailyDose > 0 ? Math.ceil(stockCount / dailyDose) : null;
+        const daysLeft = calcDaysLeft(stockCount, dailyDose, dailyFrequency);
 
         return {
           inventoryId: item.id.toString(),
@@ -76,12 +81,17 @@ export class RemindersService {
           stockCount,
           totalCount: item.total_count ?? 0,
           dailyDose,
-          dailyFrequency: item.daily_frequency ?? 1,
+          dailyFrequency,
           daysLeft,
-          status: stockCount <= 3 ? 'CRITICAL_STOCK' : 'LOW_STOCK',
+          status:
+            daysLeft !== null && daysLeft <= CRITICAL_STOCK_DAYS
+              ? 'CRITICAL_STOCK'
+              : 'LOW_STOCK',
         };
       })
-      .filter((item) => item.stockCount <= 7);
+      .filter(
+        (item) => item.daysLeft !== null && item.daysLeft <= LOW_STOCK_DAYS,
+      );
 
     doseReminders.sort((a, b) => {
       const priority: Record<ReminderStatus, number> = {
@@ -98,7 +108,7 @@ export class RemindersService {
       return a.supplementTime.localeCompare(b.supplementTime);
     });
 
-    stockReminders.sort((a, b) => a.stockCount - b.stockCount);
+    stockReminders.sort((a, b) => (a.daysLeft ?? 0) - (b.daysLeft ?? 0));
 
     return {
       doseReminders,
