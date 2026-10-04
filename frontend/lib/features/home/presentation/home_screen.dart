@@ -8,6 +8,7 @@ import 'package:simcap/providers/supplement_provider.dart';
 import 'notification_sheet.dart';
 import 'package:simcap/services/intake_api_service.dart';
 import 'package:simcap/services/auth_service.dart';
+import 'package:simcap/services/reorder_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -241,6 +242,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildStreakCard(),
+                        _buildReorderCard(),
                         const SizedBox(height: 24),
                         Text(
                           _isSelectedToday ? '오늘의 영양 성분 분석' : '영양 성분 분석',
@@ -501,6 +503,86 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ── 복용 스트릭 & 통계 카드 ──────────────────────────────────────────────
+  /// 7일 안에 떨어지는 영양제와 바로 재구매 버튼
+  Widget _buildReorderCard() {
+    final lowStock =
+        SupplementProvider.of(context).supplements
+            .where((s) => s.isLowStock)
+            .toList()
+          ..sort((a, b) => a.daysLeft!.compareTo(b.daysLeft!));
+    if (lowStock.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.warningBg,
+        borderRadius: BorderRadius.circular(AppConstants.radiusLg),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.inventory_2_outlined, size: 18, color: AppColors.warning),
+              SizedBox(width: 6),
+              Text(
+                '곧 떨어져요',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ...lowStock.map(_buildReorderRow),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReorderRow(Supplement supplement) {
+    final days = supplement.daysLeft!;
+    final runOut = supplement.runOutDate!;
+    final color = supplement.isCriticalStock ? AppColors.danger : AppColors.warning;
+    final status = days == 0 ? '오늘 소진' : '$days일분 남음';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  supplement.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '$status · ${runOut.month}/${runOut.day} 소진 예정',
+                  style: TextStyle(fontSize: 12, color: color),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          FilledButton(
+            onPressed: () =>
+                startReorder(context, inventoryId: supplement.inventoryId),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              visualDensity: VisualDensity.compact,
+            ),
+            child: const Text('재구매'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildStreakCard() {
     final notifier = SupplementProvider.of(context);
     final streak = notifier.currentStreak;
@@ -1323,7 +1405,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               )
-            else if (!isDone && supplement.remaining <= 7)
+            else if (!isDone && supplement.isLowStock)
               Container(
                 margin: const EdgeInsets.only(right: 8),
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -1332,7 +1414,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  'D-${supplement.remaining}',
+                  'D-${supplement.daysLeft}',
                   style: const TextStyle(
                     fontSize: 10,
                     color: AppColors.danger,

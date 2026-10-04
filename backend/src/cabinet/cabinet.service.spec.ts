@@ -69,3 +69,62 @@ describe('CabinetService.update', () => {
     ).resolves.toBeDefined();
   });
 });
+
+describe('CabinetService.findStoreProduct', () => {
+  const inventory = {
+    id: BigInt(7),
+    user_uuid: OWNER,
+    status: 'active',
+    supplements: { product_name: '비타민D 2000IU' },
+  };
+
+  function createService(storeProduct: unknown) {
+    const prisma = {
+      supplementInventory: { findUnique: () => Promise.resolve(inventory) },
+      supplementsTemp: {
+        findFirst: jest.fn<(args: unknown) => Promise<unknown>>(() =>
+          Promise.resolve(storeProduct),
+        ),
+      },
+      supplementsIngredients: {
+        findMany: () => Promise.resolve([{ ingredient_name: '비타민D' }]),
+      },
+    };
+    return {
+      prisma,
+      service: new CabinetService(prisma as unknown as PrismaService),
+    };
+  }
+
+  it('같은 상품명의 스토어 상품을 성분과 함께 돌려준다', async () => {
+    const { prisma, service } = createService({
+      id: BigInt(42),
+      product_name: '비타민D 2000IU',
+      price: BigInt(15000),
+    });
+
+    await expect(service.findStoreProduct('7', OWNER)).resolves.toEqual({
+      id: BigInt(42),
+      product_name: '비타민D 2000IU',
+      price: BigInt(15000),
+      ingredients: [{ ingredient_name: '비타민D' }],
+    });
+    expect(prisma.supplementsTemp.findFirst).toHaveBeenCalledWith({
+      where: { product_name: '비타민D 2000IU' },
+    });
+  });
+
+  it('스토어에 없는 상품이면 404', async () => {
+    const { service } = createService(null);
+    await expect(service.findStoreProduct('7', OWNER)).rejects.toThrow(
+      '스토어에서 판매하지 않는 상품',
+    );
+  });
+
+  it('다른 사용자의 항목이면 404', async () => {
+    const { service } = createService({ id: BigInt(42) });
+    await expect(service.findStoreProduct('7', OTHER)).rejects.toThrow(
+      NotFoundException,
+    );
+  });
+});

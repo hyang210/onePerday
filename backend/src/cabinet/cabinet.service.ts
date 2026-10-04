@@ -221,6 +221,33 @@ export class CabinetService {
     });
   }
 
+  /**
+   * 보관함 항목과 같은 상품의 스토어(supplements_temp) 상품을 찾습니다. (재구매용)
+   * 상품명이 정확히 같은 상품만 매칭합니다.
+   */
+  async findStoreProduct(id: string, userUuid: string) {
+    const item = await this.prisma.supplementInventory.findUnique({
+      where: { id: BigInt(id) },
+      include: { supplements: { select: { product_name: true } } },
+    });
+
+    if (!item || item.user_uuid !== userUuid || item.status !== 'active') {
+      throw new NotFoundException('Cabinet item not found');
+    }
+
+    const product = await this.prisma.supplementsTemp.findFirst({
+      where: { product_name: item.supplements.product_name },
+    });
+    if (!product) {
+      throw new NotFoundException('스토어에서 판매하지 않는 상품입니다.');
+    }
+
+    const ingredients = await this.prisma.supplementsIngredients.findMany({
+      where: { product_name: product.product_name },
+    });
+    return { ...product, ingredients };
+  }
+
   async remove(id: string, userUuid: string) {
     const inventoryId = BigInt(id);
 

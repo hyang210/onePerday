@@ -10,6 +10,7 @@ import 'package:simcap/features/store/presentation/supplement_detail_screen.dart
 import 'package:simcap/services/store_api_service.dart';
 import 'package:simcap/services/intake_api_service.dart';
 import 'package:simcap/services/auth_service.dart';
+import 'package:simcap/services/reorder_service.dart';
 
 class CabinetDetailScreen extends StatefulWidget {
   final Supplement item;
@@ -550,8 +551,52 @@ void initState() {
               style: TextStyle(fontSize: 11, color: Colors.grey[500]),
             ),
           ),
+          if (item.daysLeft != null) ...[
+            const Divider(height: 20),
+            _buildRunOutRow(),
+          ],
         ],
       ),
+    );
+  }
+
+  /// 소진 예정일과 재구매 버튼
+  Widget _buildRunOutRow() {
+    final days = item.daysLeft!;
+    final runOut = item.runOutDate!;
+    final color = item.isCriticalStock
+        ? AppColors.danger
+        : item.isLowStock
+        ? AppColors.warning
+        : Colors.black87;
+
+    return Row(
+      children: [
+        Icon(Icons.event_outlined, size: 16, color: Colors.grey[500]),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            days == 0
+                ? '오늘 다 떨어져요'
+                : '$days일분 남음 · ${runOut.month}/${runOut.day} 소진 예정',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ),
+        if (item.isLowStock)
+          FilledButton(
+            onPressed: () => startReorder(context, inventoryId: item.inventoryId),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              visualDensity: VisualDensity.compact,
+            ),
+            child: const Text('재구매'),
+          ),
+      ],
     );
   }
 

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:simcap/core/constant/app_constants.dart';
 import 'package:simcap/services/auth_service.dart';
 import 'package:simcap/services/reminder_api_service.dart';
+import 'package:simcap/routes/app_router.dart';
+import 'package:simcap/services/reorder_service.dart';
 
 class NotificationSheet extends StatelessWidget {
   const NotificationSheet({super.key});
@@ -205,8 +206,7 @@ class NotificationSheet extends StatelessWidget {
 
   // 재구매 알림 카드
   Widget _buildStockItem(BuildContext context, StockReminder item) {
-    final bool isCritical =
-        item.stockCount <= AppConstants.criticalStockThreshold;
+    final bool isCritical = item.status == 'CRITICAL_STOCK';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -263,21 +263,27 @@ class NotificationSheet extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '[${item.supplementName}]이(가) ${item.stockCount}정 남았습니다.',
+                  item.daysLeft == null
+                      ? '[${item.supplementName}]이(가) ${item.stockCount}정 남았습니다.'
+                      : '[${item.supplementName}]이(가) ${item.stockCount}정(${item.daysLeft}일분) 남았습니다.',
                   style: const TextStyle(fontSize: 13, color: Colors.black87),
                 ),
                 const SizedBox(height: 8),
                 // 스토어 이동 버튼
                 GestureDetector(
                   onTap: () {
+                    // 시트가 닫혀도 유지되는 앱 루트 context로 재구매 진행
+                    final rootContext = AppRouter.navigatorKey.currentContext;
                     Navigator.pop(context);
-                    context.push('/store');
+                    if (rootContext != null) {
+                      startReorder(rootContext, inventoryId: item.inventoryId);
+                    }
                   },
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        '스토어에서 재구매',
+                        '바로 재구매',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,

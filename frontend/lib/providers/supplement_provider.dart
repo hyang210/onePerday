@@ -385,7 +385,7 @@ class SupplementNotifier extends ChangeNotifier {
   }
 
   // 재고가 7정 이하로 남은 영양제 개수
-  int get lowStockCount => _supplements.where((s) => s.remaining <= 7).length;
+  int get lowStockCount => _supplements.where((s) => s.isLowStock).length;
 
   // 홈 화면 배지에 표시할 전체 알림 개수
   int get totalNotificationCount => undoneCount + lowStockCount;

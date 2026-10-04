@@ -175,7 +175,8 @@ class NotificationService {
     if (id >= 1000 && id < 2000) {
       context.go('/home');
     } else if (id >= 2000 && id < 3000) {
-      context.go('/cabinet');
+      // 재구매 알림 → '곧 떨어져요' 카드(재구매 버튼)가 있는 홈
+      context.go('/home');
     }
   }
 
@@ -273,7 +274,7 @@ class NotificationService {
     final lowStock = supplements
         .asMap()
         .entries
-        .where((e) => e.value.remaining <= AppConstants.lowStockThreshold)
+        .where((e) => e.value.isLowStock)
         .toList();
 
     for (final entry in lowStock) {
@@ -290,8 +291,12 @@ class NotificationService {
   Future<void> _showStockAlarm(Supplement supplement, int index) async {
     if (!_initialized) return;
     try {
-      final isCritical =
-          supplement.remaining <= AppConstants.criticalStockThreshold;
+      final isCritical = supplement.isCriticalStock;
+      final days = supplement.daysLeft ?? 0;
+      final runOut = supplement.runOutDate;
+      final runOutText = runOut == null
+          ? ''
+          : ' (${runOut.month}/${runOut.day} 소진 예정)';
 
       final androidDetails = AndroidNotificationDetails(
         _stockChannelId,
@@ -307,9 +312,10 @@ class NotificationService {
       final title = isCritical
           ? '⚠️ ${supplement.name} 재구매 긴급'
           : '🔔 ${supplement.name} 재구매 필요';
+      final daysText = days == 0 ? '오늘 다 떨어져요' : '$days일분 남았어요';
       final body = isCritical
-          ? '${supplement.remaining}정 남았어요. 지금 바로 주문하세요!'
-          : '${supplement.remaining}정 남았어요. 곧 소진됩니다.';
+          ? '$daysText$runOutText. 눌러서 바로 재구매하세요!'
+          : '$daysText$runOutText. 눌러서 재구매할 수 있어요.';
 
       await _plugin.show(
         _stockNotificationId(index),

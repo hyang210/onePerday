@@ -43,6 +43,7 @@ describe('AppModule 인증 적용', () => {
     ['get', '/reminders/today/11111111-1111-1111-1111-111111111111'],
     ['get', '/recommend?userId=11111111-1111-1111-1111-111111111111'],
     ['patch', '/cabinet/1'],
+    ['get', '/cabinet/1/store-product'],
     ['post', '/api/payment/verify'],
     ['post', '/intake/complete'],
     ['post', '/chatbot/message'],
