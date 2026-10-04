@@ -15,6 +15,7 @@ import { RecommendModule } from './recommend/recommend.module';
 import { CabinetModule } from './cabinet/cabinet.module';
 import { RemindersModule } from './reminders/reminders.module';
 import { ReviewModule } from './review/review.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ReviewModule } from './review/review.module';
     RemindersModule,
     CabinetModule,
     ReviewModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService, SupplementSearchService],

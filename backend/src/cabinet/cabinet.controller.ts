@@ -1,6 +1,9 @@
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { CabinetService } from './cabinet.service';
 import { CreateCabinetDto } from './dto/create-cabinet.dto';
+import { CurrentUser } from '../auth/current-user.decorator';
+import { assertSameUser } from '../auth/auth-user';
+import type { AuthUser } from '../auth/auth-user';
 
 type JsonValue =
   | string
@@ -52,7 +55,8 @@ export class CabinetController {
   constructor(private readonly cabinetService: CabinetService) {}
 
   @Post()
-  async create(@Body() dto: CreateCabinetDto) {
+  async create(@Body() dto: CreateCabinetDto, @CurrentUser() user: AuthUser) {
+    assertSameUser(user, dto.userUuid);
     const data = await this.cabinetService.create(dto);
 
     return {
@@ -62,7 +66,11 @@ export class CabinetController {
   }
 
   @Get(':userUuid')
-  async findByUser(@Param('userUuid') userUuid: string) {
+  async findByUser(
+    @Param('userUuid') userUuid: string,
+    @CurrentUser() user: AuthUser,
+  ) {
+    assertSameUser(user, userUuid);
     const data = await this.cabinetService.findByUser(userUuid);
 
     return {
@@ -72,8 +80,8 @@ export class CabinetController {
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    const data = await this.cabinetService.remove(id);
+  async remove(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    const data = await this.cabinetService.remove(id, user.id);
 
     return {
       success: true,
