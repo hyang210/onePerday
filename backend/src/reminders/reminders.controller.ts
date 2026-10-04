@@ -1,5 +1,8 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { RemindersService } from './reminders.service';
+import { CurrentUser } from '../auth/current-user.decorator';
+import { assertSameUser } from '../auth/auth-user';
+import type { AuthUser } from '../auth/auth-user';
 
 type JsonValue =
   | string
@@ -43,7 +46,11 @@ export class RemindersController {
   constructor(private readonly remindersService: RemindersService) {}
 
   @Get('today/:userUuid')
-  async getTodayReminders(@Param('userUuid') userUuid: string) {
+  async getTodayReminders(
+    @Param('userUuid') userUuid: string,
+    @CurrentUser() user: AuthUser,
+  ) {
+    assertSameUser(user, userUuid);
     const data = await this.remindersService.getTodayReminders(userUuid);
 
     return {

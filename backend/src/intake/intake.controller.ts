@@ -2,6 +2,9 @@ import { Controller, Post, Body } from '@nestjs/common';
 import { IntakeService } from './intake.service';
 import { CheckIntakeDto } from './dto/check-intake.dto';
 import { CompleteIntakeDto } from './dto/complete-intake.dto';
+import { CurrentUser } from '../auth/current-user.decorator';
+import { assertSameUser } from '../auth/auth-user';
+import type { AuthUser } from '../auth/auth-user';
 
 type JsonValue =
   | string
@@ -61,7 +64,11 @@ export class IntakeController {
   }
 
   @Post('complete')
-  async complete(@Body() dto: CompleteIntakeDto) {
+  async complete(
+    @Body() dto: CompleteIntakeDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    assertSameUser(user, dto.userUuid);
     const data = await this.intakeService.completeIntake(dto);
 
     return {
@@ -71,7 +78,8 @@ export class IntakeController {
   }
 
   @Post('cancel')
-  async cancel(@Body() dto: CompleteIntakeDto) {
+  async cancel(@Body() dto: CompleteIntakeDto, @CurrentUser() user: AuthUser) {
+    assertSameUser(user, dto.userUuid);
     const data = await this.intakeService.cancelIntake(dto);
 
     return {

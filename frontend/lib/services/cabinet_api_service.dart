@@ -46,6 +46,7 @@ class CabinetApiService {
   }) async {
     final response = await http.get(
       Uri.parse('${AppConstants.apiBaseUrl}/cabinet/$userUuid'),
+      headers: AppConstants.headers,
     );
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
@@ -63,6 +64,7 @@ class CabinetApiService {
   Future<void> deleteCabinetItem({required String inventoryId}) async {
     final response = await http.delete(
       Uri.parse('${AppConstants.apiBaseUrl}/cabinet/$inventoryId'),
+      headers: AppConstants.headers,
     );
 
     if (response.statusCode < 200 || response.statusCode >= 300) {

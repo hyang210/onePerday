@@ -189,7 +189,7 @@ export class CabinetService {
     return enrichedItems;
   }
 
-  async remove(id: string) {
+  async remove(id: string, userUuid: string) {
     const inventoryId = BigInt(id);
 
     const item = await this.prisma.supplementInventory.findUnique({
@@ -198,7 +198,8 @@ export class CabinetService {
       },
     });
 
-    if (!item) {
+    // 다른 사용자의 항목은 존재 여부도 알려주지 않음
+    if (!item || item.user_uuid !== userUuid) {
       throw new NotFoundException('Cabinet item not found');
     }
 

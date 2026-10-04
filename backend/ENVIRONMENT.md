@@ -11,6 +11,9 @@ DIRECT_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE"
 SUPABASE_URL="https://your-project.supabase.co"
 SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
 
+# 관리자 계정 이메일 (쉼표로 구분). 비어 있으면 /admin API는 아무도 사용할 수 없습니다.
+ADMIN_EMAILS="admin@example.com"
+
 # 공공데이터포털 DUR 병용금기 API
 DUR_API_KEY="your-dur-api-key"
 
@@ -40,3 +43,16 @@ YOLO crop 스크립트는 Python에서 실행되므로 서버 환경에 아래 �
 ```bash
 pip install -r backend/scripts/requirements.txt
 ```
+
+## 인증
+
+모든 API는 기본적으로 로그인이 필요합니다. 요청 헤더에 Supabase access token을 담아 보내야 합니다.
+
+```
+Authorization: Bearer <Supabase access token>
+```
+
+- 토큰이 없거나 유효하지 않으면 `401`, 다른 사용자의 데이터(`userUuid`, `userId`)를 요청하면 `403`을 돌려줍니다.
+- 로그인 없이 호출할 수 있는 API(`@Public()`): `GET /`, `GET /supplements`, `GET /supplements/popular`, `POST /supplements/search`, `GET /review/:productId`
+- `/admin/*` API는 `ADMIN_EMAILS`에 등록된 계정만 호출할 수 있습니다.
+- `GET /auth/me`: 로그인한 사용자 정보와 관리자 여부(`isAdmin`)를 돌려줍니다.

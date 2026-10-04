@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:simcap/features/store/presentation/supplement_detail_screen.dart';
+import 'package:simcap/core/constant/app_constants.dart';
 import 'package:simcap/services/api_config.dart';
 
 class StoreApiService {
@@ -49,7 +50,7 @@ class StoreApiService {
     final uri = Uri.parse(
       '$baseUrl/supplements',
     ).replace(queryParameters: queryParams.isEmpty ? null : queryParams);
-    final response = await http.get(uri);
+    final response = await http.get(uri, headers: AppConstants.headers);
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception('영양제 목록 조회 실패: ${response.body}');
@@ -68,6 +69,7 @@ class StoreApiService {
   Future<List<StoreProduct>> fetchRecommendedSupplements(String userId) async {
     final response = await http.get(
       Uri.parse('$baseUrl/recommend?userId=$userId'),
+      headers: AppConstants.headers,
     );
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
@@ -84,7 +86,10 @@ class StoreApiService {
 
   // [개선된 코드] 실시간 인기 검색어 목록을 가져오는 함수 추가
   Future<List<String>> fetchPopularSearches() async {
-    final response = await http.get(Uri.parse('$baseUrl/supplements/popular'));
+    final response = await http.get(
+      Uri.parse('$baseUrl/supplements/popular'),
+      headers: AppConstants.headers,
+    );
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception('인기 검색어 조회 실패: ${response.body}');
