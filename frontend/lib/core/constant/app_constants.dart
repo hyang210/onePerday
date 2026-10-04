@@ -155,11 +155,11 @@ abstract class AppConstants {
   /// 기본 화면 좌우 패딩
   static const double horizontalPadding = 16.0;
 
-  /// 재구매 알림 기준 잔여량 (정 수)
-  static const int lowStockThreshold = 7;
+  /// 재구매 알림 기준: 남은 일수가 이 값 이하 (백엔드 LOW_STOCK_DAYS와 동일)
+  static const int lowStockDays = 7;
 
-  /// 긴급 재구매 기준 잔여량 (정 수)
-  static const int criticalStockThreshold = 3;
+  /// 긴급 재구매 기준: 남은 일수가 이 값 이하 (백엔드 CRITICAL_STOCK_DAYS와 동일)
+  static const int criticalStockDays = 3;
 
   /// API 기본 주소 (환경에 따라 동적 변경)
   /// 백엔드 공통 헤더. 로그인 상태면 Supabase access token을 함께 보냅니다.

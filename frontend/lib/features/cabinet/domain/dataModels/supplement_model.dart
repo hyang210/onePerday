@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:simcap/core/constant/app_constants.dart';
 
 class Nutrient {
   final String name;
@@ -59,6 +60,36 @@ class Supplement {
 
   /// 사용자 지정 알림 시간 목록 (dailyFrequency에 맞게 설정)
   final List<TimeOfDay> alarmTimes;
+
+  /// 하루에 먹는 개수 (1회 복용량 × 하루 횟수)
+  int get dailyUsage => dailyDose * dailyFrequency;
+
+  /// 남은 개수로 며칠 더 먹을 수 있는지. 하루치를 못 채우는 날은 세지 않습니다.
+  /// 복용량 정보가 없으면 null. (백엔드 calcDaysLeft와 같은 계산)
+  int? get daysLeft {
+    if (dailyUsage <= 0) return null;
+    return (remaining < 0 ? 0 : remaining) ~/ dailyUsage;
+  }
+
+  /// 소진 예정일 (오늘 + 남은 일수)
+  DateTime? get runOutDate {
+    final days = daysLeft;
+    if (days == null) return null;
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day).add(Duration(days: days));
+  }
+
+  /// 재구매가 필요한 상태 (남은 일수가 AppConstants.lowStockDays 이하)
+  bool get isLowStock {
+    final days = daysLeft;
+    return days != null && days <= AppConstants.lowStockDays;
+  }
+
+  /// 긴급 재구매 상태 (남은 일수가 AppConstants.criticalStockDays 이하)
+  bool get isCriticalStock {
+    final days = daysLeft;
+    return days != null && days <= AppConstants.criticalStockDays;
+  }
 
   Supplement({
     String? id,

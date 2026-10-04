@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:simcap/core/constant/app_constants.dart';
 import 'package:simcap/features/cabinet/domain/dataModels/supplement_model.dart';
+import 'package:simcap/features/store/presentation/supplement_detail_screen.dart';
 
 class CabinetApiService {
   Future<CabinetItem> createCabinetItem({
@@ -84,6 +85,23 @@ class CabinetApiService {
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception('캐비넷 서버 수정 실패: ${response.body}');
     }
+  }
+
+  /// 보관함 항목과 같은 스토어 상품 (재구매용). 스토어에 없으면 null.
+  Future<StoreProduct?> fetchStoreProduct({required String inventoryId}) async {
+    final response = await http.get(
+      Uri.parse('${AppConstants.apiBaseUrl}/cabinet/$inventoryId/store-product'),
+      headers: AppConstants.headers,
+    );
+
+    if (response.statusCode == 404) return null;
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('스토어 상품 조회 실패: ${response.body}');
+    }
+
+    final decoded =
+        jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+    return StoreProduct.fromJson(decoded['data'] as Map<String, dynamic>);
   }
 
   Future<void> deleteCabinetItem({required String inventoryId}) async {
