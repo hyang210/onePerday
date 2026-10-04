@@ -10,6 +10,7 @@ import {
 import { CabinetService } from './cabinet.service';
 import { CreateCabinetDto } from './dto/create-cabinet.dto';
 import { UpdateCabinetDto } from './dto/update-cabinet.dto';
+import { ParseBigIntIdPipe } from '../common/parse-bigint-id.pipe';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { assertSameUser } from '../auth/auth-user';
 import type { AuthUser } from '../auth/auth-user';
@@ -90,7 +91,7 @@ export class CabinetController {
 
   @Patch(':id')
   async update(
-    @Param('id') id: string,
+    @Param('id', ParseBigIntIdPipe) id: string,
     @Body() dto: UpdateCabinetDto,
     @CurrentUser() user: AuthUser,
   ) {
@@ -103,7 +104,10 @@ export class CabinetController {
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+  async remove(
+    @Param('id', ParseBigIntIdPipe) id: string,
+    @CurrentUser() user: AuthUser,
+  ) {
     const data = await this.cabinetService.remove(id, user.id);
 
     return {

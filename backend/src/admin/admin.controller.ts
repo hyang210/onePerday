@@ -6,12 +6,17 @@ import {
   Param,
   Patch,
   Post,
+  ParseUUIDPipe,
   Query,
   UseGuards,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SupabaseService } from '../supabase/supabase.service';
 import { AdminGuard } from '../auth/admin.guard';
+import {
+  ParseBigIntIdPipe,
+  toBigIntOrBadRequest,
+} from '../common/parse-bigint-id.pipe';
 
 /** 관리자 웹 전용 API. ADMIN_EMAILS에 등록된 계정만 호출할 수 있습니다. */
 @UseGuards(AdminGuard)
@@ -46,7 +51,7 @@ export class AdminController {
   }
 
   @Delete('users/:id')
-  async deleteUser(@Param('id') id: string) {
+  async deleteUser(@Param('id', ParseUUIDPipe) id: string) {
     await this.prisma.usersInfo.delete({ where: { id } });
     const { error } = await this.supabaseService
       .getClient()
@@ -77,7 +82,7 @@ export class AdminController {
             origin: body.origin,
             image_url: body.image_url,
             shop_url: body.shop_url,
-            price: body.price ? BigInt(body.price) : null,
+            price: toBigIntOrBadRequest(body.price),
           },
         }),
         (key, value) => (typeof value === 'bigint' ? value.toString() : value),
@@ -86,7 +91,7 @@ export class AdminController {
   }
 
   @Delete('supplements/:id')
-  async deleteSupplement(@Param('id') id: string) {
+  async deleteSupplement(@Param('id', ParseBigIntIdPipe) id: string) {
     return this.prisma.supplementsTemp.delete({ where: { id: BigInt(id) } });
   }
 
@@ -149,7 +154,7 @@ export class AdminController {
   }
 
   @Patch('users/:id')
-  async updateUser(@Param('id') id: string, @Body() body: any) {
+  async updateUser(@Param('id', ParseUUIDPipe) id: string, @Body() body: any) {
     return this.prisma.usersInfo.update({
       where: { id },
       data: {
@@ -161,7 +166,7 @@ export class AdminController {
   }
 
   @Patch('supplements/:id')
-  async updateSupplement(@Param('id') id: string, @Body() body: any) {
+  async updateSupplement(@Param('id', ParseBigIntIdPipe) id: string, @Body() body: any) {
     return JSON.parse(
       JSON.stringify(
         await this.prisma.supplementsTemp.update({
@@ -182,7 +187,7 @@ export class AdminController {
             origin: body.origin,
             image_url: body.image_url,
             shop_url: body.shop_url,
-            price: body.price ? BigInt(body.price) : null,
+            price: toBigIntOrBadRequest(body.price),
           },
         }),
         (key, value) => (typeof value === 'bigint' ? value.toString() : value),

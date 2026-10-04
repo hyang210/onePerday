@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { ReviewService } from './review.service';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { Public } from '../auth/public.decorator';
+import { ParseBigIntIdPipe } from '../common/parse-bigint-id.pipe';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { assertSameUser } from '../auth/auth-user';
 import type { AuthUser } from '../auth/auth-user';
@@ -21,7 +22,7 @@ export class ReviewController {
 
   @Public()
   @Get(':productId')
-  async getReviewsByProduct(@Param('productId') productId: string) {
+  async getReviewsByProduct(@Param('productId', ParseBigIntIdPipe) productId: string) {
     return this.reviewService.getReviewsByProduct(productId);
   }
 
