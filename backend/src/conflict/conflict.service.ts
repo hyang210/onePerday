@@ -152,6 +152,8 @@ export class ConflictService {
     // 1. DB에서 장바구니 영양제 조회 및 Conflict 객체 변환
     if (supplementIds && supplementIds.length > 0) {
       const supplementBigIntIds = supplementIds
+        // 숫자가 아닌 ID는 BigInt 변환 오류(500)가 나므로 제외
+        .filter((id) => /^\d+$/.test(String(id)))
         .map((id) => BigInt(id))
         .filter((id) => id <= BigInt(2147483647));
 

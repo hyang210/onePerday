@@ -3,7 +3,7 @@ import os
 import sys
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageOps
 from ultralytics import YOLO
 
 
@@ -32,9 +32,14 @@ def main():
     confidence_threshold = float(os.environ.get("YOLO_CONF", "0.35"))
     padding_ratio = float(os.environ.get("YOLO_CROP_PADDING", "0.06"))
 
+    # 휴대폰 사진은 회전 정보(EXIF)만 붙어 있는 경우가 많아, 먼저 실제 방향으로 돌려놓습니다.
+    # YOLO 검출과 crop이 같은 이미지를 쓰도록 이 이미지를 그대로 YOLO에 넘깁니다.
+    image = ImageOps.exif_transpose(Image.open(input_path)).convert("RGB")
+    width, height = image.size
+
     model = YOLO(str(model_path))
     results = model.predict(
-        source=str(input_path),
+        source=image,
         conf=confidence_threshold,
         save=False,
         verbose=False,
@@ -57,9 +62,6 @@ def main():
     best_index = int(confidences.argmax())
     confidence = float(confidences[best_index])
     xyxy = boxes.xyxy[best_index].cpu().numpy().tolist()
-
-    image = Image.open(input_path).convert("RGB")
-    width, height = image.size
 
     x1, y1, x2, y2 = xyxy
     pad_x = (x2 - x1) * padding_ratio
