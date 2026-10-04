@@ -84,16 +84,6 @@ class _PurchaseScreenState extends State<PurchaseScreen> {
     return '';
   }
 
-  String get _firstProductId {
-    if (widget.product != null) {
-      return widget.product!.id;
-    }
-    if (widget.cartItems != null && widget.cartItems!.isNotEmpty) {
-      return widget.cartItems!.first.productId;
-    }
-    return '';
-  }
-
   List<PurchaseItem> get _purchaseItems {
     if (widget.product != null) {
       return [
@@ -195,11 +185,22 @@ class _PurchaseScreenState extends State<PurchaseScreen> {
     );
   }
 
-  Future<bool> _verifyPayment({
+  /// 결제한 상품 목록. 서버가 DB 가격으로 결제 금액을 다시 계산합니다.
+  List<Map<String, dynamic>> get _paymentItems {
+    if (widget.product != null) {
+      return [
+        {'productId': widget.product!.id, 'count': 1},
+      ];
+    }
+    return (widget.cartItems ?? [])
+        .map((i) => {'productId': i.productId, 'count': i.count})
+        .toList();
+  }
+
+  /// 서버에서 결제를 검증합니다. 성공하면 null, 실패하면 사용자에게 보여줄 메시지.
+  Future<String?> _verifyPayment({
     required String impUid,
     required String merchantUid,
-    required int amount,
-    required String productId,
   }) async {
     try {
       final url = Uri.parse('${AppConstants.apiBaseUrl}/api/payment/verify');
@@ -208,17 +209,21 @@ class _PurchaseScreenState extends State<PurchaseScreen> {
             url,
             headers: AppConstants.headers,
             body: jsonEncode({
-              'imp_uid': impUid,
-              'merchant_uid': merchantUid,
-              'amount': amount,
-              'product_id': productId,
+              'impUid': impUid,
+              'merchantUid': merchantUid,
+              'items': _paymentItems,
             }),
           )
-          .timeout(const Duration(seconds: 3));
-      return response.statusCode == 200;
+          .timeout(const Duration(seconds: 15));
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return null;
+      }
+      final body = jsonDecode(utf8.decode(response.bodyBytes));
+      final message = body is Map ? body['message'] : null;
+      return message is String ? message : '결제 검증에 실패했습니다.';
     } catch (e) {
-      debugPrint('결제 검증 오류: \$e');
-      return true; // 백엔드 미연동 시 성공 처리
+      debugPrint('결제 검증 오류: $e');
+      return '결제 검증 중 오류가 발생했습니다. 고객센터에 문의해주세요.';
     }
   }
 
@@ -240,7 +245,7 @@ class _PurchaseScreenState extends State<PurchaseScreen> {
         payMethod = 'card';
     }
 
-    final merchantUid = 'order_\${DateTime.now().millisecondsSinceEpoch}';
+    final merchantUid = 'order_${DateTime.now().millisecondsSinceEpoch}';
     final buyerName = _nameController.text.trim().isNotEmpty
         ? _nameController.text.trim()
         : '구매자';
@@ -268,7 +273,7 @@ class _PurchaseScreenState extends State<PurchaseScreen> {
               ],
             ),
           ),
-          userCode: 'imp24258048',
+          userCode: AppConstants.portoneUserCode,
           data: PaymentData(
             pg: pg,
             payMethod: payMethod,
@@ -294,19 +299,12 @@ class _PurchaseScreenState extends State<PurchaseScreen> {
 
             if (isSuccess) {
               final impUid = result['imp_uid'] ?? '';
-              bool verified = false;
-              try {
-                verified = await _verifyPayment(
-                  impUid: impUid,
-                  merchantUid: merchantUid,
-                  amount: _totalPrice,
-                  productId: _firstProductId,
-                );
-              } catch (e) {
-                verified = true;
-              }
+              final errorMessage = await _verifyPayment(
+                impUid: impUid,
+                merchantUid: merchantUid,
+              );
 
-              if (verified) {
+              if (errorMessage == null) {
                 notifier.addPurchase(_purchaseItems);
                 if (widget.cartItems != null) {
                   notifier.clearCheckedCartItems();
@@ -319,7 +317,7 @@ class _PurchaseScreenState extends State<PurchaseScreen> {
                 final ctx = AppRouter.navigatorKey.currentContext;
                 if (ctx != null) {
                   ScaffoldMessenger.of(ctx).showSnackBar(
-                    const SnackBar(content: Text('결제 검증에 실패했습니다.')),
+                    SnackBar(content: Text(errorMessage)),
                   );
                 }
               }

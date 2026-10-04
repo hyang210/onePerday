@@ -193,7 +193,7 @@ class _BasketScreenState extends State<BasketScreen> {
       0,
       (sum, i) => sum + i.price * i.count,
     );
-    final merchantUid = 'order_\${DateTime.now().millisecondsSinceEpoch}';
+    final merchantUid = 'order_${DateTime.now().millisecondsSinceEpoch}';
     final productName = checkedItems.length == 1
         ? checkedItems.first.name
         : '\${checkedItems.first.name} 외 \${checkedItems.length - 1}건';
@@ -218,7 +218,7 @@ class _BasketScreenState extends State<BasketScreen> {
               ],
             ),
           ),
-          userCode: 'imp24258048',
+          userCode: AppConstants.portoneUserCode,
           data: PaymentData(
             pg: pg,
             payMethod: pg.startsWith('kakaopay')
