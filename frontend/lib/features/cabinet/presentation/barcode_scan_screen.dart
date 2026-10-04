@@ -1,6 +1,4 @@
 import 'dart:io';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -14,6 +12,7 @@ import 'package:simcap/features/store/presentation/supplement_detail_screen.dart
 import 'package:simcap/features/cabinet/presentation/supplement_info_screen.dart';
 import 'dart:async';
 import 'package:simcap/services/store_api_service.dart';
+import 'package:simcap/services/label_recognition_api_service.dart';
 
 /// 통합 스캔 결과
 class ScanResult {
@@ -191,65 +190,40 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
 
   Future<void> _uploadAndProcessOCR(File imageFile) async {
     try {
-      final uri = Uri.parse('${AppConstants.apiBaseUrl}/supplements/ocr');
-      final request = http.MultipartRequest('POST', uri);
-      request.headers.addAll(AppConstants.headers);
+      final result = await LabelRecognitionApiService().analyze(imageFile);
 
-      request.files.add(
-        await http.MultipartFile.fromPath('image', imageFile.path),
+      if (!mounted) return;
+
+      final List<Nutrient> nutrientsList = result.nutrientNames
+          .map(
+            (name) => Nutrient(name: name, value: 0, unit: '', percent: 0.0),
+          )
+          .toList();
+
+      final supplement = Supplement(
+        supplementId: result.supplementId,
+        name: result.productName,
+        brand: result.brandName,
+        imagePath: imageFile.path,
+        imageUrl: result.imageUrl,
+        remaining: 0,
+        total: 90,
+        dailyDose: 1,
+        dailyFrequency: 1,
+        nutrients: nutrientsList,
+        analysisGuide: 'OCR 분석 완료: 백엔드에서 성분 정보를 가져왔습니다.',
+        aiSummary: '',
       );
 
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
+      await context.push('/cabinet/info', extra: supplement);
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final Map<String, dynamic> result = json.decode(
-          utf8.decode(response.bodyBytes),
-        );
-
-        if (!mounted) return;
-
-        final String name = result['productName'] ?? '알 수 없는 영양제';
-        final String brand = result['brandName'] ?? '알 수 없는 브랜드';
-        final String nutrientsStr = result['nutrients'] ?? '비타민C, 비타민D';
-        final String? imageUrl = result['imageUrl'];
-
-        final List<Nutrient> nutrientsList = nutrientsStr
-            .split(',')
-            .where((e) => e.trim().isNotEmpty)
-            .map(
-              (e) => Nutrient(name: e.trim(), value: 0, unit: '', percent: 0.0),
-            )
-            .toList();
-
-        final supplement = Supplement(
-          supplementId:
-              result['id']?.toString() ?? result['supplementId']?.toString(),
-          name: name,
-          brand: brand,
-          imagePath: imageFile.path,
-          imageUrl: imageUrl,
-          remaining: 0,
-          total: 90,
-          dailyDose: 1,
-          dailyFrequency: 1,
-          nutrients: nutrientsList,
-          analysisGuide: 'OCR 분석 완료: 백엔드에서 성분 정보를 가져왔습니다.',
-          aiSummary: '',
-        );
-
-        await context.push('/cabinet/info', extra: supplement);
-
-        if (mounted) {
-          setState(() {
-            _isCapturing = false;
-            _isProcessing = false;
-            _hasScanned = false;
-          });
-          _startBarcodeScanning();
-        }
-      } else {
-        throw Exception('서버 응답 오류: ${response.statusCode}');
+      if (mounted) {
+        setState(() {
+          _isCapturing = false;
+          _isProcessing = false;
+          _hasScanned = false;
+        });
+        _startBarcodeScanning();
       }
     } catch (e) {
       debugPrint('OCR Upload Error: $e');

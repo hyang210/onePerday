@@ -32,6 +32,47 @@ class LabelRecognitionResult {
       yoloConfidence: (yolo?['confidence'] as num?)?.toDouble(),
     );
   }
+
+  /// DB 매칭 결과를 신뢰할 수 있는 최소 confidence
+  static const double minMatchConfidence = 0.7;
+
+  /// 신뢰할 수 있는 DB 매칭 결과 (없으면 null)
+  SupplementMatch? get confidentMatch =>
+      match != null && match!.confidence >= minMatchConfidence ? match : null;
+
+  String get productName {
+    final name = confidentMatch?.productName ?? structured.productName;
+    return name.isNotEmpty ? name : '알 수 없는 영양제';
+  }
+
+  String get brandName {
+    final brand = confidentMatch?.brandName ?? '';
+    if (brand.isNotEmpty) return brand;
+    return structured.brandName.isNotEmpty
+        ? structured.brandName
+        : '알 수 없는 브랜드';
+  }
+
+  String? get imageUrl => confidentMatch?.imageUrl;
+
+  String? get supplementId {
+    final id = confidentMatch?.id;
+    return id == null || id.isEmpty ? null : id;
+  }
+
+  /// 성분 이름 목록 (DB 매칭 성분 우선, 없으면 라벨에서 추출한 성분)
+  List<String> get nutrientNames {
+    final fromDb = confidentMatch?.ingredients
+            .map((item) => item.name)
+            .where((name) => name.isNotEmpty)
+            .toList() ??
+        const <String>[];
+    if (fromDb.isNotEmpty) return fromDb;
+    return structured.nutrients
+        .map((item) => item.name)
+        .where((name) => name.isNotEmpty)
+        .toList();
+  }
 }
 
 class StructuredLabel {
@@ -161,11 +202,13 @@ class LabelRecognitionApiService {
     final response = await http.Response.fromStream(streamed);
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception('라벨 인식 실패: ${response.body}');
+      throw Exception(
+        '라벨 인식 실패 (${response.statusCode}): ${utf8.decode(response.bodyBytes)}',
+      );
     }
 
     return LabelRecognitionResult.fromJson(
-      jsonDecode(response.body) as Map<String, dynamic>,
+      jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>,
     );
   }
 }
