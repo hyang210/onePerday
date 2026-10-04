@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart'; // kReleaseMode 사용을 위해 추가
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 ///
 /// 사용법:
@@ -162,10 +163,24 @@ abstract class AppConstants {
   static const int criticalStockThreshold = 3;
 
   /// API 기본 주소 (환경에 따라 동적 변경)
-  static Map<String, String> get headers => {
-    'Content-Type': 'application/json',
-    'ngrok-skip-browser-warning': 'true',
-  };
+  /// 백엔드 공통 헤더. 로그인 상태면 Supabase access token을 함께 보냅니다.
+  static Map<String, String> get headers {
+    final token = _accessToken;
+    return {
+      'Content-Type': 'application/json',
+      'ngrok-skip-browser-warning': 'true',
+      if (token != null) 'Authorization': 'Bearer $token',
+    };
+  }
+
+  static String? get _accessToken {
+    try {
+      return Supabase.instance.client.auth.currentSession?.accessToken;
+    } catch (_) {
+      // Supabase 초기화 전(테스트 등)에는 토큰 없이 요청
+      return null;
+    }
+  }
 
   static String get apiBaseUrl {
     // 1. 실제 출시(운영) 환경
