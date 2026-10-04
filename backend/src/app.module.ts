@@ -17,6 +17,7 @@ import { CabinetModule } from './cabinet/cabinet.module';
 import { RemindersModule } from './reminders/reminders.module';
 import { ReviewModule } from './review/review.module';
 import { AdminModule } from './admin/admin.module';
+import { PaymentModule } from './payment/payment.module';
 import { PrismaExceptionFilter } from './common/prisma-exception.filter';
 
 @Module({
@@ -34,6 +35,7 @@ import { PrismaExceptionFilter } from './common/prisma-exception.filter';
     CabinetModule,
     ReviewModule,
     AdminModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [
