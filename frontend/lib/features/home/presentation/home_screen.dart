@@ -41,21 +41,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final supplements = notifier.supplements;
 
     // 실제 사용자 정보 조회
-    final userInfo = await AuthService().getUserInfo();
+    final profile = await AuthService().getIntakeProfile();
     if (!mounted) return;
-
-    final int userAge = userInfo?['birth_year'] != null
-        ? DateTime.now().year - (userInfo!['birth_year'] as int)
-        : 24;
-    // DB: 'male'/'female' 또는 '남성'/'여성'/'남자'/'여자' 모두 처리
-    final rawGender = (userInfo?['gender'] as String?)?.toLowerCase() ?? '';
-    final String userGender =
-        (rawGender == 'male' ||
-            rawGender == '남성' ||
-            rawGender == '남자' ||
-            rawGender == 'm')
-        ? 'male'
-        : 'female';
 
     final List<Map<String, dynamic>> takenCartItems = [];
     for (final s in supplements) {
@@ -83,8 +70,8 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final results = await IntakeApiService().checkOverdoseByCartItems(
         cartItems: takenCartItems,
-        age: userAge,
-        gender: userGender,
+        age: profile.age,
+        gender: profile.gender,
       );
 
       if (!mounted) return;

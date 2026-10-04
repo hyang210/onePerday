@@ -176,35 +176,32 @@ class _CabinetScreenState extends State<CabinetScreen> {
             context.push('/cabinet/info', extra: products.first.toSupplement());
           }
         } else {
-          if (mounted) {
-            context.push(
-              '/cabinet/add',
-              extra: Supplement(
-                name: result.barcodeValue!,
-                brand: '',
-                remaining: 0,
-                total: 0,
-                nutrients: [],
-              ),
-            );
-          }
+          await _addFromLabel();
         }
       } catch (e) {
         debugPrint('바코드 제품 조회 실패: $e');
-        if (mounted) {
-          context.push(
-            '/cabinet/add',
-            extra: Supplement(
-              name: result.barcodeValue!,
-              brand: '',
-              remaining: 0,
-              total: 0,
-              nutrients: [],
-            ),
-          );
-        }
+        await _addFromLabel();
       }
     }
+  }
+
+  /// 바코드로 제품을 찾지 못하면 라벨 촬영 등록 화면(신규 등록 모드)으로 이동
+  Future<void> _addFromLabel() async {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('바코드로 제품을 찾지 못했습니다. 라벨을 촬영해 등록해주세요.'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+
+    final added = await context.push<Supplement>('/cabinet/add');
+    if (added == null || !mounted) return;
+
+    await SupplementProvider.of(context).addSupplement(
+      added,
+      backendSupplementId: added.supplementId,
+    );
   }
 
   @override

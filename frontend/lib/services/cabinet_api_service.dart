@@ -61,6 +61,31 @@ class CabinetApiService {
         .toList();
   }
 
+  Future<void> updateCabinetItem({
+    required String inventoryId,
+    required int dailyDose,
+    required int dailyFrequency,
+    required int stockCount,
+    required int totalCount,
+    required List<String> alarmTimes,
+  }) async {
+    final response = await http.patch(
+      Uri.parse('${AppConstants.apiBaseUrl}/cabinet/$inventoryId'),
+      headers: AppConstants.headers,
+      body: jsonEncode({
+        'dailyDose': dailyDose,
+        'dailyFrequency': dailyFrequency,
+        'stockCount': stockCount,
+        'totalCount': totalCount,
+        'alarmTimes': alarmTimes,
+      }),
+    );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('캐비넷 서버 수정 실패: ${response.body}');
+    }
+  }
+
   Future<void> deleteCabinetItem({required String inventoryId}) async {
     final response = await http.delete(
       Uri.parse('${AppConstants.apiBaseUrl}/cabinet/$inventoryId'),

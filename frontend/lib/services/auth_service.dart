@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:simcap/core/supabase/supabase_client.dart';
 
@@ -44,6 +45,27 @@ class AuthService {
       debugPrint('[AuthService] getUserInfo 실패: \$e');
       return null;
     }
+  }
+
+  /// 과다섭취 검사용 나이/성별 ('male' | 'female').
+  /// DB(users_info) → 온보딩 때 기기에 저장한 값 → 기본값(24세 여성) 순서로 사용합니다.
+  Future<({int age, String gender})> getIntakeProfile() async {
+    final info = await getUserInfo();
+    final prefs = await SharedPreferences.getInstance();
+
+    final birthYear = info?['birth_year'];
+    final int age = birthYear is int
+        ? DateTime.now().year - birthYear
+        : int.tryParse(prefs.getString('userAge') ?? '') ?? 24;
+
+    final rawGender =
+        ((info?['gender'] as String?) ?? prefs.getString('userGender') ?? '')
+            .toLowerCase();
+    final gender = const ['male', '남성', '남자', 'm'].contains(rawGender)
+        ? 'male'
+        : 'female';
+
+    return (age: age, gender: gender);
   }
 
   Future<bool> hasUserInfo() async {
