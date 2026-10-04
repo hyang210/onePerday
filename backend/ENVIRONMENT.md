@@ -25,6 +25,12 @@ GEMINI_MODEL="gemini-3.5-flash"
 CLOVA_OCR_INVOKE_URL="https://your-clova-ocr-invoke-url"
 CLOVA_OCR_SECRET="your-clova-ocr-secret"
 
+# PortOne(아임포트) V1 REST API 키 — 결제 검증(POST /api/payment/verify)에 사용
+# 관리자 콘솔 → 상점·계정 관리 → 내 식별코드·API Keys (V1 API)
+# 앱의 가맹점 식별코드(PORTONE_USER_CODE, 기본 imp24258048)와 같은 계정의 키여야 합니다.
+PORTONE_API_KEY="your-portone-rest-api-key"
+PORTONE_API_SECRET="your-portone-rest-api-secret"
+
 # YOLO 라벨 crop
 # 미설정 시 backend 실행 위치 기준 ../../onePerday-Feature-YOLO-SJ/weights/best.pt 를 찾습니다.
 YOLO_MODEL_PATH="C:\\OPD\\onePerday-Feature-YOLO-SJ\\weights\\best.pt"
@@ -63,3 +69,13 @@ Authorization: Bearer <Supabase access token>
 - 로그인 없이 호출할 수 있는 API(`@Public()`): `GET /`, `GET /supplements`, `GET /supplements/popular`, `POST /supplements/search`, `GET /review/:productId`
 - `/admin/*` API는 `ADMIN_EMAILS`에 등록된 계정만 호출할 수 있습니다.
 - `GET /auth/me`: 로그인한 사용자 정보와 관리자 여부(`isAdmin`)를 돌려줍니다.
+
+## 결제 검증
+
+앱은 PortOne 결제가 끝나면 `POST /api/payment/verify`로 `impUid`, `merchantUid`, 상품 목록(`items`)을 보냅니다.
+서버는 앱이 보낸 금액을 믿지 않고 DB 가격 × 수량으로 결제 금액을 다시 계산한 뒤, PortOne에 실제로 결제된 금액·주문번호·상태와 비교합니다.
+
+- 일치하면 `200`, 앱은 구매 내역을 저장합니다.
+- 금액이나 주문번호가 다르면 PortOne에서 **결제를 취소**하고 `400`을 돌려줍니다.
+- `PORTONE_API_KEY` / `PORTONE_API_SECRET`이 없으면 `503`을 돌려주므로 결제가 완료 처리되지 않습니다.
+- 앱의 가맹점 식별코드는 `flutter run --dart-define=PORTONE_USER_CODE=imp...`로 바꿀 수 있습니다.

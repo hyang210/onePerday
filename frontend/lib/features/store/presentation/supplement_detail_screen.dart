@@ -615,7 +615,7 @@ class _SupplementDetailScreenState extends State<SupplementDetailScreen> {
     StoreProduct product, {
     String pg = 'kakaopay.TC0ONETIME',
   }) async {
-    final merchantUid = 'order_\${DateTime.now().millisecondsSinceEpoch}';
+    final merchantUid = 'order_${DateTime.now().millisecondsSinceEpoch}';
 
     Navigator.push(
       context,
@@ -637,7 +637,7 @@ class _SupplementDetailScreenState extends State<SupplementDetailScreen> {
               ],
             ),
           ),
-          userCode: 'imp24258048',
+          userCode: AppConstants.portoneUserCode,
           data: PaymentData(
             pg: pg,
             payMethod: pg.startsWith('kakaopay')

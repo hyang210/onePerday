@@ -184,6 +184,12 @@ abstract class AppConstants {
   /// 백엔드 주소. 기본값은 ngrok 주소이며, 실행/빌드할 때 바꿀 수 있습니다.
   ///   flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3000   (에뮬레이터 + 로컬 서버)
   ///   flutter build apk --dart-define=API_BASE_URL=https://api.example.com
+  /// PortOne(아임포트) 가맹점 식별코드. 백엔드 PORTONE_API_KEY와 같은 계정이어야 합니다.
+  static const String portoneUserCode = String.fromEnvironment(
+    'PORTONE_USER_CODE',
+    defaultValue: 'imp24258048',
+  );
+
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
     defaultValue: 'https://arousal-cocoa-bunt.ngrok-free.dev',
