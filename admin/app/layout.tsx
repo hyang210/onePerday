@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 import Link from 'next/link'
 import Image from 'next/image'
+import AuthGate from '../components/AuthGate'
+import LogoutButton from '../components/LogoutButton'
 
 export const metadata: Metadata = {
   title: '관리자 페이지',
@@ -35,9 +37,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             fontSize: '15px',
             fontWeight: 500,
           }}>영양제 관리</Link>
+          <LogoutButton />
         </nav>
         <main style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-          {children}
+          <AuthGate>{children}</AuthGate>
         </main>
       </body>
     </html>
