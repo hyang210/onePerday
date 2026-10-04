@@ -42,6 +42,7 @@ describe('AppModule 인증 적용', () => {
     ['get', '/cabinet/11111111-1111-1111-1111-111111111111'],
     ['get', '/reminders/today/11111111-1111-1111-1111-111111111111'],
     ['get', '/recommend?userId=11111111-1111-1111-1111-111111111111'],
+    ['patch', '/cabinet/1'],
     ['post', '/intake/complete'],
     ['post', '/chatbot/message'],
     ['post', '/label-recognition/analyze'],

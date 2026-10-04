@@ -1,6 +1,15 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { CabinetService } from './cabinet.service';
 import { CreateCabinetDto } from './dto/create-cabinet.dto';
+import { UpdateCabinetDto } from './dto/update-cabinet.dto';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { assertSameUser } from '../auth/auth-user';
 import type { AuthUser } from '../auth/auth-user';
@@ -72,6 +81,20 @@ export class CabinetController {
   ) {
     assertSameUser(user, userUuid);
     const data = await this.cabinetService.findByUser(userUuid);
+
+    return {
+      success: true,
+      data: serializeBigInt(data),
+    };
+  }
+
+  @Patch(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateCabinetDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    const data = await this.cabinetService.update(id, user.id, dto);
 
     return {
       success: true,
