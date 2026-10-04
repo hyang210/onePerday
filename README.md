@@ -85,34 +85,73 @@ onePerday/
 
 ## 실행 방법 (How to Run)
 
-각 모듈별로 독립적인 실행 환경이 필요합니다. 아래 가이드를 참고하여 실행해 주세요.
+백엔드 서버와 Flutter 앱은 **각각 다른 터미널**에서 켜야 합니다. (둘 다 실행 중인 상태로 유지됩니다)
 
-### 1. Backend (NestJS API 서버)
+### 0. 처음 한 번만: 설치 및 설정
 ```bash
+# 백엔드 패키지 설치
 cd backend
 npm install
-# .env 파일 설정 필수 (Supabase URL, DB URL, Gemini API Key 등)
+npx prisma generate
+
+# 라벨 인식(YOLO crop)용 Python 패키지
+pip install -r scripts/requirements.txt
+
+# 앱 패키지 설치
+cd ../frontend
+flutter pub get
+```
+- `backend/.env` 파일을 만들어야 합니다. 필요한 값과 설명은 [`backend/ENVIRONMENT.md`](backend/ENVIRONMENT.md)를 참고하세요.
+- `.env`는 비밀키가 들어 있어 git에 올라가지 않습니다. 실행하는 PC마다 직접 만들어야 합니다.
+
+### 1. 터미널 1: 백엔드 서버 (NestJS)
+```bash
+cd backend
 npm run start:dev
 ```
+- 반드시 `backend` 폴더에서 실행하세요. (`.env`와 `scripts/crop_label.py`를 이 위치 기준으로 찾습니다)
+- `http://localhost:3000`으로 켜지며, 브라우저에서 열었을 때 `OnePerDay!`가 보이면 정상입니다.
+- 코드를 수정하면 자동으로 다시 시작됩니다.
 
-### 2. Python 스크립트 환경 설정 (OCR 및 이미지 처리)
-```bash
-cd backend/scripts
-pip install -r requirements.txt
-```
+### 2. 터미널 2: Flutter 앱
+앱이 백엔드를 찾아갈 주소에 따라 실행 명령이 다릅니다.
 
-### 3. Frontend (Flutter 모바일 앱)
+| 실행 환경 | 명령 |
+|---|---|
+| Android 에뮬레이터 + 내 PC 서버 | `flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3000` |
+| 실제 휴대폰 + 같은 Wi-Fi의 PC | `flutter run --dart-define=API_BASE_URL=http://<PC의 IP>:3000` |
+| ngrok 주소 사용 (기본값) | `flutter run` (아래 3번의 ngrok 실행 필요) |
+
 ```bash
 cd frontend
-flutter pub get
-flutter run
-# 백엔드 주소를 바꾸려면 (기본값: ngrok 주소)
 flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3000
 ```
+- `10.0.2.2`는 Android 에뮬레이터 안에서 "내 PC"를 가리키는 주소입니다.
+- PC의 IP는 Windows에서 `ipconfig`로 확인합니다. (예: `192.168.0.12`) 방화벽이 3000번 포트를 막으면 연결되지 않습니다.
+- 주소 설정은 `frontend/lib/core/constant/app_constants.dart`의 `AppConstants.apiBaseUrl` 한 곳에서 관리합니다.
 
-### 4. Admin Web (Next.js 관리자 페이지)
+### 3. (선택) 터미널 3: ngrok
+`--dart-define` 없이 `flutter run`으로 실행하면 앱은 기본값인 ngrok 주소로 접속합니다. 이때는 ngrok으로 로컬 서버를 외부에 연결해야 합니다.
+```bash
+ngrok http --url=arousal-cocoa-bunt.ngrok-free.dev 3000
+```
+- 이 고정 주소를 소유한 ngrok 계정으로 로그인되어 있어야 합니다.
+- 구버전 ngrok은 `--url` 대신 `--domain`을 사용합니다.
+
+### 4. (선택) 관리자 웹 (Next.js)
 ```bash
 cd admin
 npm install
-npm run dev
+npm run dev -- -p 3001
+```
+- 관리자 웹의 기본 포트도 3000이라 백엔드와 겹치므로 **`-p 3001`을 꼭 붙여야 합니다.** 접속 주소는 `http://localhost:3001`입니다.
+- `admin/.env.local` 설정과 관리자 계정 등록 방법은 [`admin/README.md`](admin/README.md)를 참고하세요.
+
+### 요약: 에뮬레이터로 개발할 때
+```bash
+# 터미널 1
+cd backend && npm run start:dev
+
+# 터미널 2
+cd frontend && flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3000
 ```

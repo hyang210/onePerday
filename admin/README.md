@@ -20,19 +20,13 @@ Supabase 이메일/비밀번호 로그인을 사용합니다.
 
 ## Getting Started
 
-First, run the development server:
+백엔드가 3000번 포트를 쓰므로, 관리자 웹은 3001번 포트로 실행합니다.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run dev -- -p 3001
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+브라우저에서 [http://localhost:3001](http://localhost:3001)을 엽니다.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
