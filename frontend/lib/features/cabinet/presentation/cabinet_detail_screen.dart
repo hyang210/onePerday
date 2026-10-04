@@ -9,6 +9,7 @@ import 'package:simcap/features/store/data/store_product_data.dart';
 import 'package:simcap/features/store/presentation/supplement_detail_screen.dart';
 import 'package:simcap/services/store_api_service.dart';
 import 'package:simcap/services/intake_api_service.dart';
+import 'package:simcap/services/auth_service.dart';
 
 class CabinetDetailScreen extends StatefulWidget {
   final Supplement item;
@@ -56,10 +57,11 @@ void initState() {
         };
       }).toList();
 
+      final profile = await AuthService().getIntakeProfile();
       final results = await IntakeApiService().checkOverdoseByCartItems(
         cartItems: cartItems,
-        age: 24,
-        gender: 'female',
+        age: profile.age,
+        gender: profile.gender,
       );
 
       if (!mounted) return;

@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCabinetDto } from './dto/create-cabinet.dto';
+import { UpdateCabinetDto } from './dto/update-cabinet.dto';
 
 @Injectable()
 export class CabinetService {
@@ -187,6 +188,37 @@ export class CabinetService {
     });
 
     return enrichedItems;
+  }
+
+  async update(id: string, userUuid: string, dto: UpdateCabinetDto) {
+    const inventoryId = BigInt(id);
+
+    const item = await this.prisma.supplementInventory.findUnique({
+      where: { id: inventoryId },
+    });
+
+    // 다른 사용자의 항목은 존재 여부도 알려주지 않음
+    if (!item || item.user_uuid !== userUuid || item.status !== 'active') {
+      throw new NotFoundException('Cabinet item not found');
+    }
+
+    const dailyFrequency = dto.dailyFrequency ?? item.daily_frequency ?? 1;
+    if (dto.alarmTimes && dto.alarmTimes.length !== dailyFrequency) {
+      throw new BadRequestException(
+        'alarmTimes length must match dailyFrequency',
+      );
+    }
+
+    return this.prisma.supplementInventory.update({
+      where: { id: inventoryId },
+      data: {
+        daily_dose: dto.dailyDose,
+        daily_frequency: dto.dailyFrequency,
+        stock_count: dto.stockCount,
+        total_count: dto.totalCount,
+        alarm_times: dto.alarmTimes,
+      },
+    });
   }
 
   async remove(id: string, userUuid: string) {

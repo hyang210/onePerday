@@ -13,6 +13,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:simcap/services/review_api_service.dart';
 import 'package:simcap/services/intake_api_service.dart';
+import 'package:simcap/services/auth_service.dart';
 
 // 스토어 상품 데이터 모델
 // TODO: 백엔드 연동 후 API 응답 모델로 교체
@@ -396,10 +397,11 @@ class _SupplementDetailScreenState extends State<SupplementDetailScreen> {
         },
       ];
 
+      final profile = await AuthService().getIntakeProfile();
       final results = await IntakeApiService().checkOverdoseByCartItems(
         cartItems: cartItems,
-        age: 24,
-        gender: 'female',
+        age: profile.age,
+        gender: profile.gender,
       );
 
       if (mounted) {

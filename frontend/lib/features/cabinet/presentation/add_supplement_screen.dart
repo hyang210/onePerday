@@ -135,16 +135,12 @@ class _AddSupplementScreenState extends State<AddSupplementScreen>
     if (result == null || !mounted) return;
 
     if (result.isBarcode) {
-      setState(() {
-        _nameController.text = result.barcodeValue!;
-        _tabController.animateTo(_tabManual);
-      });
+      // 바코드만으로는 DB 제품을 찾을 수 없어 라벨 촬영으로 안내
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('바코드 인식 완료: ${result.barcodeValue}'),
-          duration: const Duration(seconds: 2),
+        const SnackBar(
+          content: Text('바코드로 제품을 찾지 못했습니다. 라벨을 촬영해주세요.'),
+          duration: Duration(seconds: 2),
           behavior: SnackBarBehavior.floating,
-          backgroundColor: AppColors.primary,
         ),
       );
     } else if (result.isOCR && result.imageFile != null) {
@@ -285,21 +281,42 @@ class _AddSupplementScreenState extends State<AddSupplementScreen>
     );
 
     try {
-      if (!_isEditMode) {
-        // 신규 등록 시에만 백엔드 서버에 저장 API 호출
-        await CabinetApiService().createCabinetItem(
+      final alarmTimes = _alarmTimes.map(_toTimeString).toList();
+      var savedSupplement = newSupplement;
+
+      if (_isEditMode) {
+        final inventoryId = widget.initialItem?.inventoryId;
+        if (inventoryId == null) {
+          throw Exception('서버에 등록되지 않은 영양제입니다. 삭제 후 다시 등록해주세요.');
+        }
+        await CabinetApiService().updateCabinetItem(
+          inventoryId: inventoryId,
+          dailyDose: _dailyDose,
+          dailyFrequency: _dailyFrequency,
+          stockCount: remainingCount,
+          totalCount: totalCount,
+          alarmTimes: alarmTimes,
+        );
+      } else {
+        final createdItem = await CabinetApiService().createCabinetItem(
           userUuid: user.id,
           supplementId: _supplementId!,
           dailyDose: _dailyDose,
           dailyFrequency: _dailyFrequency,
           stockCount: remainingCount,
           totalCount: totalCount,
-          alarmTimes: _alarmTimes.map(_toTimeString).toList(),
+          alarmTimes: alarmTimes,
+        );
+        // 복용 완료/취소에 서버 보관함 ID가 필요하므로 응답 값으로 맞춤
+        savedSupplement = newSupplement.copyWith(
+          id: createdItem.id,
+          supplementId: createdItem.supplementId,
+          inventoryId: createdItem.id,
         );
       }
 
       FocusManager.instance.primaryFocus?.unfocus();
-      if (mounted) Navigator.pop(context, newSupplement);
+      if (mounted) Navigator.pop(context, savedSupplement);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

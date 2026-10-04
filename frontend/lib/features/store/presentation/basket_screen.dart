@@ -12,6 +12,7 @@ import 'package:simcap/routes/app_router.dart';
 import 'package:simcap/features/cabinet/domain/dataModels/supplement_model.dart';
 import 'package:simcap/services/intake_api_service.dart';
 import 'package:simcap/services/conflict_api_service.dart';
+import 'package:simcap/services/auth_service.dart';
 
 // 검사 결과 데이터 모델
 
@@ -622,18 +623,14 @@ class _BasketScreenState extends State<BasketScreen> {
       final notifier = SupplementProvider.of(context);
       final checkedItems = notifier.cartItems.where((c) => c.checked).toList();
 
-      final prefs = await SharedPreferences.getInstance();
-      final String rawGender = prefs.getString('gender') ?? prefs.getString('userGender') ?? 'female';
-      final String gender = (rawGender == '남성' || rawGender == 'male' || rawGender == '남자') ? 'male' : 'female';
-      final String rawAge = prefs.getString('userAge') ?? '24';
-      final int age = int.tryParse(rawAge) ?? 24;
+      final profile = await AuthService().getIntakeProfile();
 
       final api = IntakeApiService();
 
       final results = await api.checkOverdoseByCartItems(
         cartItems: checkedItems,
-        age: age,
-        gender: gender,
+        age: profile.age,
+        gender: profile.gender,
       );
 
       setState(() {
