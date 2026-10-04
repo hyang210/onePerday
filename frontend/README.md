@@ -21,5 +21,5 @@ flutter clean
 # 2. 필요한 패키지 설치
 flutter pub get
 
-# 3. 앱 실행
+# 3. 앱 실행 (백엔드 주소를 바꾸려면 --dart-define=API_BASE_URL=http://10.0.2.2:3000)
 flutter run

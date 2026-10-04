@@ -3,14 +3,13 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:simcap/features/store/presentation/review_screen.dart';
-import 'package:simcap/services/api_config.dart';
 
 class ReviewApiService {
   /// 특정 상품의 리뷰 목록 조회 API
   Future<List<ProductReview>> fetchReviews(String productId) async {
     try {
       final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/review/$productId'),
+        Uri.parse('${AppConstants.apiBaseUrl}/review/$productId'),
         headers: AppConstants.headers,
       );
 
@@ -47,7 +46,7 @@ class ReviewApiService {
   }) async {
     try {
       final response = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}/review'),
+        Uri.parse('${AppConstants.apiBaseUrl}/review'),
         headers: AppConstants.headers,
         body: jsonEncode({
           'productId': productId,
@@ -68,7 +67,7 @@ class ReviewApiService {
   Future<List<ProductReview>> fetchUserReviews(String userId) async {
     try {
       final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/review/user/$userId'),
+        Uri.parse('${AppConstants.apiBaseUrl}/review/user/$userId'),
         headers: AppConstants.headers,
       );
 

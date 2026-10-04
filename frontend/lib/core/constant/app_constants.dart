@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart'; // kReleaseMode 사용을 위해 추가
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 ///
@@ -182,15 +181,11 @@ abstract class AppConstants {
     }
   }
 
-  static String get apiBaseUrl {
-    // 1. 실제 출시(운영) 환경
-    if (kReleaseMode) {
-      return 'https://arousal-cocoa-bunt.ngrok-free.dev';
-    }
-
-    // 2. 개발 환경
-    // 에뮬레이터 테스트 시: 아래를 'http://10.0.2.2:3000' 으로 변경
-    // 실제 기기 테스트 시: ngrok URL 유지
-    return 'https://arousal-cocoa-bunt.ngrok-free.dev';
-  }
+  /// 백엔드 주소. 기본값은 ngrok 주소이며, 실행/빌드할 때 바꿀 수 있습니다.
+  ///   flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3000   (에뮬레이터 + 로컬 서버)
+  ///   flutter build apk --dart-define=API_BASE_URL=https://api.example.com
+  static const String apiBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'https://arousal-cocoa-bunt.ngrok-free.dev',
+  );
 }

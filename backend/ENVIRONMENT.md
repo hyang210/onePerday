@@ -33,8 +33,15 @@ YOLO_CONF=0.35
 YOLO_CROP_PADDING=0.06
 ```
 
-프론트엔드의 백엔드 주소는 `frontend/lib/core/constant/app_constants.dart`의 `AppConstants.apiBaseUrl`에서 관리합니다. (`ApiConfig.baseUrl`도 이 값을 그대로 사용합니다.)
-Android 에뮬레이터에서 로컬 백엔드를 쓰려면 이 값을 `http://10.0.2.2:3000`으로 바꿉니다.
+프론트엔드의 백엔드 주소는 `AppConstants.apiBaseUrl`(`frontend/lib/core/constant/app_constants.dart`) 한 곳에서 관리합니다.
+기본값은 ngrok 주소이고, 코드를 고치지 않고 실행/빌드할 때 바꿀 수 있습니다.
+
+```bash
+# Android 에뮬레이터 + 로컬 백엔드
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3000
+# 실제 기기 + 같은 Wi-Fi의 PC
+flutter run --dart-define=API_BASE_URL=http://<PC-IP>:3000
+```
 
 영양제 라벨 OCR은 `POST /label-recognition/analyze` 하나로 처리합니다. (YOLO crop → CLOVA OCR → Gemini 구조화 → DB TOP 1 매칭)
 

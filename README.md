@@ -106,6 +106,8 @@ pip install -r requirements.txt
 cd frontend
 flutter pub get
 flutter run
+# 백엔드 주소를 바꾸려면 (기본값: ngrok 주소)
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3000
 ```
 
 ### 4. Admin Web (Next.js 관리자 페이지)

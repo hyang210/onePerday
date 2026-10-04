@@ -2,10 +2,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:simcap/features/store/presentation/supplement_detail_screen.dart';
 import 'package:simcap/core/constant/app_constants.dart';
-import 'package:simcap/services/api_config.dart';
 
 class StoreApiService {
-  static String get baseUrl => ApiConfig.baseUrl;
+  static String get baseUrl => AppConstants.apiBaseUrl;
 
   static List<StoreProduct>? _cachedSupplements;
   static String _cacheKey = '';
