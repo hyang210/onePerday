@@ -1,10 +1,9 @@
 import 'package:simcap/core/constant/app_constants.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:simcap/services/api_config.dart';
 
 class ConflictApiService {
-  static String get baseUrl => ApiConfig.baseUrl;
+  static String get baseUrl => AppConstants.apiBaseUrl;
 
   Future<List<ConflictCheckResult>> checkConflictsBySupplementIds({
     required List<int> supplementIds,

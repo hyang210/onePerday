@@ -2,7 +2,6 @@ import 'package:simcap/core/constant/app_constants.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:simcap/services/api_config.dart';
 
 class LabelRecognitionResult {
   final String ocrText;
@@ -191,7 +190,7 @@ class LabelRecognitionApiService {
   Future<LabelRecognitionResult> analyze(File imageFile) async {
     final request = http.MultipartRequest(
       'POST',
-      Uri.parse('${ApiConfig.baseUrl}/label-recognition/analyze'),
+      Uri.parse('${AppConstants.apiBaseUrl}/label-recognition/analyze'),
     );
     request.headers.addAll(AppConstants.headers);
     request.files.add(

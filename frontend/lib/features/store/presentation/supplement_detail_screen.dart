@@ -11,7 +11,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:portone_flutter/v1.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:simcap/services/api_config.dart';
 import 'package:simcap/services/review_api_service.dart';
 import 'package:simcap/services/intake_api_service.dart';
 
@@ -1013,7 +1012,7 @@ class _SupplementDetailScreenState extends State<SupplementDetailScreen> {
   }) async {
     try {
       // TODO: 실제 서버 주소로 교체
-      final url = Uri.parse('${ApiConfig.baseUrl}/api/payment/verify');
+      final url = Uri.parse('${AppConstants.apiBaseUrl}/api/payment/verify');
       final response = await http
           .post(
             url,
